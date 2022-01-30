@@ -11,7 +11,8 @@
     "core-js": "^3.6.5",
     "three": "^0.137.5",
     "vue": "^3.0.0",
-    "vue-class-component": "^8.0.0-0"
+    "vue-class-component": "^8.0.0-0",
+    "vue-property-decorator": "^9.1.2"
   },
   "devDependencies": {
     "@types/three": "^0.137.0",

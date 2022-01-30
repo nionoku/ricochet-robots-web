@@ -1,0 +1,19 @@
+{
+  "robots": [
+    {
+      "color": "green"
+    },
+    {
+      "color": "red"
+    },
+    {
+      "color": "blue"
+    },
+    {
+      "color": "yellow"
+    },
+    {
+      "color": "grey"
+    }
+  ]
+}
