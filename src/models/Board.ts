@@ -1,8 +1,10 @@
-import { Vec2 } from 'three';
+import { round } from '@/utils/round';
+import { Object3D, Vec2, Vector3 } from 'three';
+import { Robot } from './Robot';
 
 const BOARD_WIDTH = 16;
 const BOARD_CENTER = BOARD_WIDTH / 2;
-const BOARD_LENGTH = BOARD_WIDTH ** 2;
+const BOARD_SIZE = BOARD_WIDTH ** 2;
 const STEP = 1;
 const DEVIATION = 0.5;
 
@@ -60,4 +62,65 @@ const TARGETS: Array<Target> = [
 
 export class Board {
   protected _wallsCoords: Array<Vec2> = []
+
+  protected _availablePositions: Array<Vec2> = Array
+    .from({ length: BOARD_SIZE }, (_, i) => ({
+      x: i % BOARD_WIDTH,
+      y: Math.floor(i / BOARD_WIDTH),
+    }))
+    // exclude center
+    .filter(({ x, y }) => !(CENTER_COORDS.includes(x) && CENTER_COORDS.includes(y)));
+
+  protected _robots: Array<Robot> = []
+
+  constructor(
+    boardParts: Object3D,
+  ) {
+    boardParts.traverse((it) => {
+      // exclude targets from initial places
+      if (it.name.startsWith('target') && TARGETS.includes(it.name as Target)) {
+        const position = it.getWorldPosition(new Vector3());
+        const coords = this.coordsByPosition({ x: position.x, y: position.z });
+        const indexOfCell = this._availablePositions
+          .findIndex(({ x, y }) => x === coords.x && y === coords.y);
+
+        if (indexOfCell > -1) {
+          this._availablePositions.splice(indexOfCell, 1);
+        }
+      }
+
+      if (
+        it.name === BOARD_ENTITY_WALL && (
+          it.parent?.name === BOARD_ENTITY_CORNER_WALL_CONTAINER
+            || it.parent?.name === BOARD_ENTITY_SIDE_WALL_CONTAINER
+        )
+      ) {
+        const position = it.getWorldPosition(new Vector3());
+        this._wallsCoords.push({
+          x: round(position.x, 10),
+          y: round(position.z, 10),
+        });
+      }
+    });
+
+    // fill center quadrant
+    this._wallsCoords.push(...[
+      { x: -0.5, y: -1 },
+      { x: 0.5, y: -1 },
+      { x: -0.5, y: 1 },
+      { x: 0.5, y: 1 },
+      { x: -1, y: -0.5 },
+      { x: -1, y: 0.5 },
+      { x: 1, y: -0.5 },
+      { x: 1, y: 0.5 },
+    ]);
+  }
+
+  protected coordsByPosition({ x, y }: Vec2): Vec2 {
+    throw new Error('Not implemented');
+  }
+
+  protected positionByCoords({ x, y }: Vec2): Vec2 {
+    throw new Error('Not implemented');
+  }
 }
