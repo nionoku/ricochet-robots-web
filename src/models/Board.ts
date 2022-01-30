@@ -1,5 +1,8 @@
+// eslint-disable-next-line max-classes-per-file
 import { round } from '@/utils/round';
-import { Object3D, Vec2, Vector3 } from 'three';
+import {
+  Group, Mesh, MeshStandardMaterial, Object3D, Vec2, Vector3,
+} from 'three';
 import boardDescription from '@/assets/board.json';
 import { Robot } from './Robot';
 
@@ -15,7 +18,8 @@ const CENTER_QUADRANT = boardDescription.center_quadrant;
 const START_POINT = boardDescription.start_point;
 const END_POINT = boardDescription.end_point;
 
-export const BOARD_ENTITY_WALL = boardDescription.object_wall_name;
+const BOARD_TARGETS = boardDescription.object_targets_name;
+const BOARD_ENTITY_WALL = boardDescription.object_wall_name;
 const BOARD_ENTITY_CORNER_WALL_CONTAINER = boardDescription.object_corner_wall_container_name;
 const BOARD_ENTITY_SIDE_WALL_CONTAINER = boardDescription.object_side_wall_container_name;
 
@@ -38,7 +42,62 @@ export enum Direction {
   BOTTOM
 }
 
+class BoardBuilder {
+  // eslint-disable-next-line no-useless-constructor
+  constructor(
+    protected boardParts: Array<Object3D>,
+  ) {}
+
+  public make(): Group {
+    const board = new Group();
+    const parts = this.boardParts.sort(() => Math.random() - 0.5);
+    parts.forEach((it, index) => {
+      it.rotation.set(0, index * (Math.PI / 2), 0);
+      it.position.set(
+        // 0: 4, 1: 4, 2: -4, 3: -4
+        index < 2 ? 4 : -4,
+        0,
+        // 0: 4, 1: -4, 2: -4, 3: 4
+        index % 3 ? -4 : 4,
+      );
+
+      // rotate icons
+      // eslint-disable-next-line no-unused-expressions
+      it.getObjectByName(BOARD_TARGETS)
+        ?.children
+        .forEach((icon) => {
+          icon.rotation.set(icon.rotation.x, 0, index * (Math.PI / 2) * -1);
+        });
+    });
+
+    board.add(...parts);
+
+    // update walls material
+    const wallMaterials = boardDescription.wall.colors
+      .map((it) => new MeshStandardMaterial({ color: it }));
+
+    board.traverse((it) => {
+      if (it.name === BOARD_ENTITY_WALL) {
+        const box: Mesh = it as Mesh;
+        box.material = wallMaterials;
+        box.geometry.groups.forEach((geometry) => {
+          // eslint-disable-next-line no-param-reassign
+          geometry.materialIndex = 0;
+        });
+
+        box.geometry
+          .groups[2]
+          .materialIndex = 1;
+      }
+    });
+
+    return board;
+  }
+}
+
 export class Board {
+  public static Builder = BoardBuilder
+
   protected _wallsCoords: Array<Vec2> = []
 
   protected _availablePositions: Array<Vec2> = Array
@@ -52,9 +111,9 @@ export class Board {
   protected _robots: Array<Robot> = []
 
   constructor(
-    boardParts: Object3D,
+    protected _boardParts: Object3D,
   ) {
-    boardParts.traverse((it) => {
+    _boardParts.traverse((it) => {
       const position = this.vector3ToVec2(it.getWorldPosition(new Vector3()));
 
       // exclude targets from initial places
@@ -97,7 +156,7 @@ export class Board {
     this._robots = robots;
   }
 
-  public generateAvailablePositions(count = 5): Array<Vec2> {
+  public generateAvailablePositions(count: number): Array<Vec2> {
     const availablePositions: Array<Vec2> = [...this._availablePositions];
     const positions: Array<Vec2> = [];
 
@@ -168,6 +227,10 @@ export class Board {
       x: round((x + DEVIATION) - BOARD_CENTER, 10),
       y: round((y + DEVIATION) - BOARD_CENTER, 10),
     };
+  }
+
+  public get object(): Object3D {
+    return this._boardParts;
   }
 
   protected calcBoardMatrix(robots: Array<Robot> = this._robots): Array<Array<Directions>> {

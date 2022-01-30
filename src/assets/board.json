@@ -52,6 +52,7 @@
       "y": 0.5
     }
   ],
+  "object_targets_name": "Targets",
   "object_wall_name": "Box",
   "object_corner_wall_container_name": "Corner wall",
   "object_side_wall_container_name": "Side walls",
@@ -74,5 +75,11 @@
     "target_yellow_moon",
     "target_yellow_planet"
   ],
-  "target_starts_with": "target"
+  "target_starts_with": "target",
+  "wall": {
+    "colors": [
+      "#FFFFFF",
+      "#212121"
+    ]
+  }
 }
