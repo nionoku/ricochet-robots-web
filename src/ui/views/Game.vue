@@ -1,5 +1,5 @@
 <template>
-  <div></div>
+  <Scene />
 </template>
 
 <script src="./Game" lang="ts" />
