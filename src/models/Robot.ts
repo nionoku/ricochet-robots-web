@@ -8,11 +8,14 @@ class Builder {
   constructor(
     protected _geometry: BufferGeometry,
     protected _color: Color,
+    protected _name: string,
   ) {}
 
   public make(): Mesh {
     const material = new MeshStandardMaterial({ color: this._color });
-    return new Mesh(this._geometry, material);
+    const mesh = new Mesh(this._geometry, material);
+    mesh.name = this._name;
+    return mesh;
   }
 }
 
@@ -46,5 +49,13 @@ export class Robot {
 
   public get object(): Object3D {
     return this._robot;
+  }
+
+  public set positionByZ(position: number) {
+    this._robot.position.setY(position);
+  }
+
+  public get positionByZ(): number {
+    return this._robot.position.y;
   }
 }

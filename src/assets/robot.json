@@ -1,19 +1,25 @@
 {
   "robots": [
     {
+      "name": "robot_green",
       "color": "green"
     },
     {
+      "name": "robot_red",
       "color": "red"
     },
     {
+      "name": "robot_blue",
       "color": "blue"
     },
     {
+      "name": "robot_yellow",
       "color": "yellow"
     },
     {
+      "name": "robot_grey",
       "color": "grey"
     }
-  ]
+  ],
+  "robot_starts_with": "robot"
 }

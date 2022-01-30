@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import { Ref } from 'vue-property-decorator';
 import { Options, Vue } from 'vue-class-component';
 import {
@@ -9,6 +10,7 @@ import {
   Color,
   PerspectiveCamera,
   Camera,
+  Raycaster,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import sceneDescription from '@/assets/scene.json';
@@ -17,6 +19,7 @@ import robotDescription from '@/assets/robot.json';
 import { loadObject, loadStl } from '@/utils/loader';
 import { Board } from '@/models/Board';
 import { Robot } from '@/models/Robot';
+import { Game } from '@/models/Game';
 
 const TEMP_SCENE_PATH = 'models/boards/scene_1.json';
 const ROBOT_PATH = 'models/robot.stl';
@@ -26,11 +29,14 @@ export default class Scene extends Vue {
   @Ref('scene')
   protected container!: HTMLDivElement
 
+  protected whenDestroy: Array<() => unknown> = []
+
   public async mounted(): Promise<void> {
     const renderer = this.makeRenderer(this.container);
     const scene = this.makeScene();
     const camera = this.makePerspectiveCamera(this.container);
     const controls = this.makeControls(camera, renderer.domElement);
+    const raycaster = new Raycaster();
 
     const [
       sceneObjects,
@@ -47,15 +53,27 @@ export default class Scene extends Vue {
     const initialPositions = board.generateAvailablePositions(robotDescription.robots.length);
     const robots: Array<Robot> = robotDescription.robots
       .map((it, i) => {
-        const robotMesh = new Robot.Builder(robotGeometry, new Color(it.color))
+        const robotMesh = new Robot.Builder(robotGeometry, new Color(it.color), it.name)
           .make();
         return new Robot(robotMesh, initialPositions[i]);
       });
+    board.robots = robots;
     /// --- end robots ---
+    /// --- game controller ---
+    const gameController = new Game();
+    const controlls = new Game.Controlls(robots);
+    /// --- end game controller ---
     /// --- add objects on scene ---
     scene.add(board.object);
     scene.add(...robots.map((it) => it.object));
     /// --- end add objects on scene ---
+    /// --- listeners ---
+    const clickIntersector = new Game.ClickIntersector(raycaster, camera, scene);
+    clickIntersector.setIsRobot((name) => name.startsWith(robotDescription.robot_starts_with));
+    clickIntersector.setIntersectRobot((uuid) => controlls.onIntersectRobotByClick(uuid));
+    clickIntersector.watch();
+    this.whenDestroy.push(clickIntersector.cancel);
+    /// --- end listeners ---
 
     // add scene on page
     this.container.appendChild(renderer.domElement);
@@ -84,6 +102,10 @@ export default class Scene extends Vue {
 
     // start rendering
     animate()(0);
+  }
+
+  public beforeDestroy(): void {
+    this.whenDestroy.forEach((it) => it());
   }
 
   protected makeRenderer(container: HTMLElement): Renderer {

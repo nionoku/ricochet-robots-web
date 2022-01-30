@@ -42,7 +42,7 @@ export enum Direction {
   BOTTOM
 }
 
-class BoardBuilder {
+class Builder {
   // eslint-disable-next-line no-useless-constructor
   constructor(
     protected boardParts: Array<Object3D>,
@@ -96,7 +96,7 @@ class BoardBuilder {
 }
 
 export class Board {
-  public static Builder = BoardBuilder
+  public static Builder = Builder
 
   protected _wallsCoords: Array<Vec2> = []
 
