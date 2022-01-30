@@ -1,0 +1,78 @@
+{
+  "width": 16,
+  "step": 1,
+  "deviation": 0.5,
+  "start_point": {
+    "x": -7.5,
+    "y": -7.5
+  },
+  "end_point": {
+    "x": 7.5,
+    "y": 7.5
+  },
+  "center_points": [
+    0.5,
+    -0.5
+  ],
+  "center_coords": [
+    7,
+    8
+  ],
+  "center_quadrant": [
+    {
+      "x": -0.5,
+      "y": -1
+    },
+    {
+      "x": 0.5,
+      "y": -1
+    },
+    {
+      "x": -0.5,
+      "y": 1
+    },
+    {
+      "x": 0.5,
+      "y": 1
+    },
+    {
+      "x": -1,
+      "y": -0.5
+    },
+    {
+      "x": -1,
+      "y": 0.5
+    },
+    {
+      "x": 1,
+      "y": -0.5
+    },
+    {
+      "x": 1,
+      "y": 0.5
+    }
+  ],
+  "object_wall_name": "Box",
+  "object_corner_wall_container_name": "Corner wall",
+  "object_side_wall_container_name": "Side walls",
+  "targets": [
+    "target_blackhole",
+    "target_blue_cross",
+    "target_blue_gear",
+    "target_blue_moon",
+    "target_blue_planet",
+    "target_green_cross",
+    "target_green_gear",
+    "target_green_moon",
+    "target_green_planet",
+    "target_red_cross",
+    "target_red_gear",
+    "target_red_moon",
+    "target_red_planet",
+    "target_yellow_cross",
+    "target_yellow_gear",
+    "target_yellow_moon",
+    "target_yellow_planet"
+  ],
+  "target_starts_with": "target"
+}

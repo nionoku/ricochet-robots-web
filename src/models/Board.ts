@@ -1,64 +1,42 @@
 import { round } from '@/utils/round';
 import { Object3D, Vec2, Vector3 } from 'three';
+import boardDescription from '@/assets/board.json';
 import { Robot } from './Robot';
 
-const BOARD_WIDTH = 16;
+const BOARD_WIDTH = boardDescription.width;
 const BOARD_CENTER = BOARD_WIDTH / 2;
 const BOARD_SIZE = BOARD_WIDTH ** 2;
-const STEP = 1;
-const DEVIATION = 0.5;
+const STEP = boardDescription.step;
+const DEVIATION = boardDescription.deviation;
 
-const CENTER_POINTS = [0.5, -0.5];
-const CENTER_COORDS = [7, 8];
-const START_POINT = -7.5;
-const END_POINT = 7.5;
+const CENTER_POINTS = boardDescription.center_points;
+const CENTER_COORDS = boardDescription.center_coords;
+const CENTER_QUADRANT = boardDescription.center_quadrant;
+const START_POINT = boardDescription.start_point;
+const END_POINT = boardDescription.end_point;
 
-export const BOARD_ENTITY_WALL = 'Box';
-const BOARD_ENTITY_CORNER_WALL_CONTAINER = 'Corner wall';
-const BOARD_ENTITY_SIDE_WALL_CONTAINER = 'Side walls';
+export const BOARD_ENTITY_WALL = boardDescription.object_wall_name;
+const BOARD_ENTITY_CORNER_WALL_CONTAINER = boardDescription.object_corner_wall_container_name;
+const BOARD_ENTITY_SIDE_WALL_CONTAINER = boardDescription.object_side_wall_container_name;
 
-enum Target {
-  BLACKHOLE = 'target_blackhole',
-  BLUE_CROSS = 'target_blue_cross',
-  BLUE_GEAR = 'target_blue_gear',
-  BLUE_MOON = 'target_blue_moon',
-  BLUE_PLANET = 'target_blue_planet',
+const START_WITH_TARGET = boardDescription.target_starts_with;
 
-  GREEN_CROSS = 'target_green_cross',
-  GREEN_GEAR = 'target_green_gear',
-  GREEN_MOON = 'target_green_moon',
-  GREEN_PLANET = 'target_green_planet',
+const TARGETS: Array<string> = boardDescription.targets;
 
-  RED_CROSS = 'target_red_cross',
-  RED_GEAR = 'target_red_gear',
-  RED_MOON = 'target_red_moon',
-  RED_PLANET = 'target_red_planet',
+// xxxx - then x is number
+// 0 - is blocked, 1 - is free
+// xxxx[0] - left
+// xxxx[1] - top
+// xxxx[2] - right
+// xxxx[3] - bottom
+type Directions = number
 
-  YELLOW_CROSS = 'target_yellow_cross',
-  YELLOW_GEAR = 'target_yellow_gear',
-  YELLOW_MOON = 'target_yellow_moon',
-  YELLOW_PLANET = 'target_yellow_planet',
+export enum Direction {
+  LEFT,
+  TOP,
+  RIGHT,
+  BOTTOM
 }
-
-const TARGETS: Array<Target> = [
-  Target.BLACKHOLE,
-  Target.BLUE_CROSS,
-  Target.BLUE_GEAR,
-  Target.BLUE_MOON,
-  Target.BLUE_PLANET,
-  Target.GREEN_CROSS,
-  Target.GREEN_GEAR,
-  Target.GREEN_MOON,
-  Target.GREEN_PLANET,
-  Target.RED_CROSS,
-  Target.RED_GEAR,
-  Target.RED_MOON,
-  Target.RED_PLANET,
-  Target.YELLOW_CROSS,
-  Target.YELLOW_GEAR,
-  Target.YELLOW_MOON,
-  Target.YELLOW_PLANET,
-];
 
 export class Board {
   protected _wallsCoords: Array<Vec2> = []
@@ -77,10 +55,14 @@ export class Board {
     boardParts: Object3D,
   ) {
     boardParts.traverse((it) => {
+      const position = this.vector3ToVec2(it.getWorldPosition(new Vector3()));
+
       // exclude targets from initial places
-      if (it.name.startsWith('target') && TARGETS.includes(it.name as Target)) {
-        const position = it.getWorldPosition(new Vector3());
-        const coords = this.coordsByPosition({ x: position.x, y: position.z });
+      if (this.isTarget(it)) {
+        const coords = this.coordsByPosition({
+          x: position.x,
+          y: position.y,
+        });
         const indexOfCell = this._availablePositions
           .findIndex(({ x, y }) => x === coords.x && y === coords.y);
 
@@ -89,38 +71,183 @@ export class Board {
         }
       }
 
-      if (
-        it.name === BOARD_ENTITY_WALL && (
-          it.parent?.name === BOARD_ENTITY_CORNER_WALL_CONTAINER
-            || it.parent?.name === BOARD_ENTITY_SIDE_WALL_CONTAINER
-        )
-      ) {
-        const position = it.getWorldPosition(new Vector3());
+      if (this.isWall(it)) {
         this._wallsCoords.push({
           x: round(position.x, 10),
-          y: round(position.z, 10),
+          y: round(position.y, 10),
         });
       }
     });
 
     // fill center quadrant
-    this._wallsCoords.push(...[
-      { x: -0.5, y: -1 },
-      { x: 0.5, y: -1 },
-      { x: -0.5, y: 1 },
-      { x: 0.5, y: 1 },
-      { x: -1, y: -0.5 },
-      { x: -1, y: 0.5 },
-      { x: 1, y: -0.5 },
-      { x: 1, y: 0.5 },
-    ]);
+    this._wallsCoords.push(...CENTER_QUADRANT);
   }
 
-  protected coordsByPosition({ x, y }: Vec2): Vec2 {
-    throw new Error('Not implemented');
+  public updateRobot(robot: Robot): void {
+    const existRobotId = this._robots.findIndex((it) => it.uuid === robot.uuid);
+
+    if (existRobotId) {
+      this._robots.splice(existRobotId, 1);
+    }
+
+    this._robots.push(robot);
   }
 
-  protected positionByCoords({ x, y }: Vec2): Vec2 {
-    throw new Error('Not implemented');
+  public set robots(robots: Array<Robot>) {
+    this._robots = robots;
+  }
+
+  public generateAvailablePositions(count = 5): Array<Vec2> {
+    const availablePositions: Array<Vec2> = [...this._availablePositions];
+    const positions: Array<Vec2> = [];
+
+    for (let i = 0; i < count; i++) {
+      const index = Math.floor(Math.random() * availablePositions.length);
+      positions.push(
+        this.positionByCoords(availablePositions.splice(index, 1)[0]),
+      );
+    }
+
+    return positions;
+  }
+
+  /**
+   * @returns position after move
+   */
+  public move(
+    robot: Robot,
+    direction: Direction,
+  ): Vec2 {
+    const shift = 3 - direction;
+    const directionBinary = 2 ** shift;
+    const matrix = this.calcBoardMatrix(
+      this._robots.filter((it) => it.uuid !== robot.uuid),
+    );
+    let { x, y } = this.coordsByPosition(robot.position);
+
+    while (((directionBinary & matrix[y][x]) >> shift) & 1) {
+      switch (direction) {
+        case Direction.LEFT: {
+          x--;
+          break;
+        }
+
+        case Direction.TOP: {
+          y--;
+          break;
+        }
+
+        case Direction.RIGHT: {
+          x++;
+          break;
+        }
+
+        case Direction.BOTTOM: {
+          y++;
+          break;
+        }
+
+        default: {
+          break;
+        }
+      }
+    }
+
+    return this.positionByCoords({ x, y });
+  }
+
+  public coordsByPosition({ x, y }: Vec2): Vec2 {
+    return {
+      x: round(BOARD_CENTER + (x - DEVIATION), 10),
+      y: round(BOARD_CENTER + (y - DEVIATION), 10),
+    };
+  }
+
+  public positionByCoords({ x, y }: Vec2): Vec2 {
+    return {
+      x: round((x + DEVIATION) - BOARD_CENTER, 10),
+      y: round((y + DEVIATION) - BOARD_CENTER, 10),
+    };
+  }
+
+  protected calcBoardMatrix(robots: Array<Robot> = this._robots): Array<Array<Directions>> {
+    const matrix: Array<Array<Directions>> = [];
+    // fill walls coords and robots coords
+    const wallsCoords: Array<Vec2> = [
+      ...this._wallsCoords,
+      ...robots.map((it) => it.position),
+    ];
+
+    for (let { y } = START_POINT; y <= END_POINT.y; y += STEP) {
+      matrix.push([]);
+
+      for (let { x } = START_POINT; x <= END_POINT.x; x += STEP) {
+        // start with 1111
+        let cellDirections = 15;
+
+        if (
+          (CENTER_POINTS.includes(x) && CENTER_POINTS.includes(y))
+            || wallsCoords.find((it) => it.x === x && it.y === y)
+        ) {
+          cellDirections = 0;
+        }
+
+        // bottom
+        if (
+          (y === END_POINT.y)
+            || (wallsCoords.find((it) => it.x === x && it.y === y + DEVIATION))
+            || (wallsCoords.find((it) => it.x === x && it.y === y + STEP))
+        ) {
+          cellDirections &= 14;
+        }
+
+        // right
+        if (
+          (x === END_POINT.x)
+            || (wallsCoords.find((it) => it.x === x + DEVIATION && it.y === y))
+            || (wallsCoords.find((it) => it.x === x + STEP && it.y === y))
+        ) {
+          cellDirections &= 13;
+        }
+
+        // top
+        if (
+          (y === START_POINT.y)
+            || (wallsCoords.find((it) => it.x === x && it.y === y - DEVIATION))
+            || (wallsCoords.find((it) => it.x === x && it.y === y - STEP))
+        ) {
+          cellDirections &= 11;
+        }
+
+        // left
+        if (
+          (x === START_POINT.x)
+            || (wallsCoords.find((it) => it.x === x - DEVIATION && it.y === y))
+            || (wallsCoords.find((it) => it.x === x - STEP && it.y === y))
+        ) {
+          cellDirections &= 7;
+        }
+
+        matrix[matrix.length - 1].push(cellDirections);
+      }
+    }
+
+    return matrix;
+  }
+
+  protected vector3ToVec2({ x, z }: Vector3): Vec2 {
+    return { x, y: z };
+  }
+
+  protected isTarget({ name }: Object3D): boolean {
+    return name.startsWith(START_WITH_TARGET)
+      && TARGETS.includes(name);
+  }
+
+  protected isWall({ name, parent }: Object3D): boolean {
+    return name === BOARD_ENTITY_WALL && (
+      parent?.name === BOARD_ENTITY_CORNER_WALL_CONTAINER
+        || parent?.name === BOARD_ENTITY_SIDE_WALL_CONTAINER
+    );
   }
 }
