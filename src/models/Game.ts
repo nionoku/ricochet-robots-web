@@ -10,9 +10,7 @@ export interface Intersector {
 class ClickIntersector implements Intersector {
   protected listener: (event: MouseEvent) => any
 
-  protected checkIsRobot?: (name: string) => boolean
-
-  protected onIntersectRobot?: (uuid: string) => void
+  protected onIntersect?: (uuid: string) => void
 
   constructor(
     raycaster: Raycaster,
@@ -30,10 +28,8 @@ class ClickIntersector implements Intersector {
       const intersects = raycaster.intersectObjects(scene.children);
 
       if (intersects.length > 0) {
-        if (this.checkIsRobot?.(intersects[0].object.name)) {
           // eslint-disable-next-line no-unused-expressions
-          this.onIntersectRobot?.(intersects[0].object.uuid);
-        }
+          this.onIntersect?.(intersects[0].object.uuid);
       }
     };
   }
@@ -46,12 +42,8 @@ class ClickIntersector implements Intersector {
     window.removeEventListener('click', this.listener);
   }
 
-  public setIsRobot(isRobot: (name: string) => boolean): void {
-    this.checkIsRobot = isRobot;
-  }
-
-  public setIntersectRobot(onIntersect: (uuid: string) => void): void {
-    this.onIntersectRobot = onIntersect;
+  public setOnIntersect(onIntersect: (uuid: string) => void): void {
+    this.onIntersect = onIntersect;
   }
 }
 
@@ -61,12 +53,12 @@ class Controlls {
     protected _robots: Array<Robot>,
   ) {}
 
-  public onIntersectRobotByClick(uuid: string): void {
+  public onIntersectByClick(uuid: string): void {
     // TODO (2022.01.31): Replace logic
     const intersectedRobot = this._robots.find((it) => it.uuid === uuid);
 
     if (intersectedRobot) {
-      intersectedRobot.positionByZ = 0.5;
+      intersectedRobot.cancelIddleAnimation();
     }
   }
 }

@@ -2,6 +2,7 @@
 import {
   Object3D, Vec2, BufferGeometry, Color, Mesh, MeshStandardMaterial,
 } from 'three';
+import robotDescription from '@/assets/robot.json';
 
 class Builder {
   // eslint-disable-next-line no-useless-constructor
@@ -22,40 +23,84 @@ class Builder {
 export class Robot {
   public static Builder = Builder
 
+  protected iddleAnimationDirection: -1 | 1 = 1
+
   // eslint-disable-next-line no-useless-constructor
   constructor(
-    protected _robot: Object3D,
-    _initialPosition?: Vec2,
+    protected robotObject: Object3D,
+    _initialPosition: Vec2,
+    protected hasIddleAnimation = true,
   ) {
-    _robot.scale.set(0.03, 0.03, 0.03);
-    _robot.rotation.set(-(Math.PI / 2), 0, 0);
+    robotObject.scale.set(0.03, 0.03, 0.03);
+    robotObject.rotation.set(-(Math.PI / 2), 0, 0);
 
-    if (_initialPosition) {
-      this.position = _initialPosition;
-    }
+    this.position = _initialPosition;
   }
 
   public get uuid(): string {
-    return this._robot.uuid;
+    return this.robotObject.uuid;
   }
 
   public set position({ x, y }: Vec2) {
-    this._robot.position.set(x, this._robot.position.y, y);
+    this.robotObject.position.set(x, this.robotObject.position.y, y);
   }
 
   public get position(): Vec2 {
-    return this._robot.position;
+    return this.robotObject.position;
   }
 
   public get object(): Object3D {
-    return this._robot;
+    return this.robotObject;
   }
 
   public set positionByZ(position: number) {
-    this._robot.position.setY(position);
+    this.robotObject.position.setY(position);
   }
 
   public get positionByZ(): number {
-    return this._robot.position.y;
+    return this.robotObject.position.y;
+  }
+
+  public startIddleAnimation(): void {
+    const [min, max] = [
+      robotDescription.by_z_animation_limits[0],
+      robotDescription.by_z_animation_limits[1],
+    ];
+    const initPosition = Math.random() * (max - min) + min;
+
+    this.robotObject.position.setY(initPosition);
+  }
+
+  public cancelIddleAnimation(): void {
+    this.hasIddleAnimation = false;
+
+    const [initialPosition] = [
+      robotDescription.by_z_animation_limits[0],
+    ];
+
+    this.robotObject.position.setY(initialPosition);
+  }
+
+  public processIddleAnimation(): void {
+    if (this.hasIddleAnimation) {
+      const [step, min, max] = [
+        robotDescription.by_z_animation_step,
+        robotDescription.by_z_animation_limits[0],
+        robotDescription.by_z_animation_limits[1],
+      ];
+
+      // TODO (2022.01.31): Calculate step by FPS
+      const nextPosition = this.robotObject.position.y + (step * this.iddleAnimationDirection);
+
+      if (nextPosition <= min) {
+        this.iddleAnimationDirection = 1;
+      }
+
+      if (nextPosition >= max) {
+        this.iddleAnimationDirection = -1;
+      }
+
+      this.robotObject.position.setY(nextPosition);
+    }
   }
 }

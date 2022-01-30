@@ -57,6 +57,8 @@ export default class Scene extends Vue {
           .make();
         return new Robot(robotMesh, initialPositions[i]);
       });
+    // init iddle animation up and down
+    robots.forEach((it) => it.startIddleAnimation());
     board.robots = robots;
     /// --- end robots ---
     /// --- game controller ---
@@ -69,9 +71,10 @@ export default class Scene extends Vue {
     /// --- end add objects on scene ---
     /// --- listeners ---
     const clickIntersector = new Game.ClickIntersector(raycaster, camera, scene);
-    clickIntersector.setIsRobot((name) => name.startsWith(robotDescription.robot_starts_with));
-    clickIntersector.setIntersectRobot((uuid) => controlls.onIntersectRobotByClick(uuid));
-    clickIntersector.watch();
+    clickIntersector
+      .setOnIntersect((uuid) => controlls.onIntersectByClick(uuid));
+    clickIntersector
+      .watch();
     this.whenDestroy.push(clickIntersector.cancel);
     /// --- end listeners ---
 
@@ -82,6 +85,8 @@ export default class Scene extends Vue {
       controls.update();
       // render scene
       renderer.render(scene, camera);
+      // apply robots iddle animation
+      robots.forEach((it) => it.processIddleAnimation());
     }
 
     function animate(): (time: number) => void {
