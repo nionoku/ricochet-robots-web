@@ -1,4 +1,9 @@
 import { Options, Vue } from 'vue-class-component';
+import Game from '@/ui/views/Game.vue';
 
-@Options({})
+@Options({
+  components: {
+    Game,
+  },
+})
 export default class App extends Vue {}

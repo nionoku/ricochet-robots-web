@@ -1,5 +1,5 @@
 <template>
-  <div>Hello world</div>
+  <Game />
 </template>
 
 <script src="./App" lang="ts" />
