@@ -18,13 +18,16 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import sceneDescription from '@/assets/scene.json';
 import cameraDescription from '@/assets/camera.json';
 import robotDescription from '@/assets/robot.json';
+import arrowDescription from '@/assets/arrow.json';
 import { loadObject, loadStl } from '@/utils/loader';
 import { Board } from '@/models/Board';
 import { Robot } from '@/models/Robot';
 import { Game } from '@/models/Game';
+import { Arrow } from '@/models/Arrow';
 
 const TEMP_SCENE_PATH = 'models/boards/scene_1.json';
 const ROBOT_PATH = 'models/robot.stl';
+const ARROW_PATH = 'models/arrow.stl';
 
 @Options({})
 export default class Scene extends Vue {
@@ -43,9 +46,11 @@ export default class Scene extends Vue {
     const [
       sceneObjects,
       robotGeometry,
+      arrowGeometry,
     ] = await Promise.all([
       loadObject(TEMP_SCENE_PATH),
       loadStl(ROBOT_PATH),
+      loadStl(ARROW_PATH),
     ]);
     /// --- board ---
     const boardGroupObject = new Board.Builder(sceneObjects.children).make();
@@ -63,6 +68,19 @@ export default class Scene extends Vue {
     robots.forEach((it) => it.startIddleAnimation(sceneDescription.fps));
     board.robots = robots;
     /// --- end robots ---
+    /// --- arrows ---
+    const arrows: Array<Arrow> = arrowDescription.arrows.map(({ color, name, direction }) => {
+      const arrowMesh = new Arrow.Builder(arrowGeometry, new Color(color), name).make();
+      return new Arrow(arrowMesh, direction);
+    });
+    robots[0].arrowsPositions.forEach((it) => {
+      const arrow = arrows.find((arrow) => arrow.direction === it.direction);
+
+      if (arrow) {
+        arrow.position = it.position;
+      }
+    });
+    /// --- end arrows ---
     /// --- lights ---
     const directionalLightsDescription = sceneDescription.directional_lights
       .map(({ intensity, position, color }) => ({
@@ -79,6 +97,7 @@ export default class Scene extends Vue {
     /// --- add objects on scene ---
     scene.add(board.object);
     scene.add(...robots.map((it) => it.object));
+    scene.add(...arrows.map((it) => it.object));
     scene.add(...directionalLights);
     /// --- end add objects on scene ---
     /// --- listeners ---

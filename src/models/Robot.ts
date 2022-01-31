@@ -3,6 +3,7 @@ import {
   Object3D, Vec2, BufferGeometry, Color, Mesh, MeshStandardMaterial,
 } from 'three';
 import robotDescription from '@/assets/robot.json';
+import { Direction } from '@/types/direction';
 
 class Builder {
   // eslint-disable-next-line no-useless-constructor
@@ -48,7 +49,10 @@ export class Robot {
   }
 
   public get position(): Vec2 {
-    return this.robotObject.position;
+    return {
+      x: this.robotObject.position.x,
+      y: this.robotObject.position.z,
+    };
   }
 
   public get object(): Object3D {
@@ -116,6 +120,17 @@ export class Robot {
 
   public get hasIddleAnimation(): boolean {
     return this._hasIddleAnimation;
+  }
+
+  public get arrowsPositions(): Array<{ direction: Direction, position: Vec2 }> {
+    return Array.from({ length: 4 })
+      .map((_, i, array) => ({
+        direction: i,
+        position: {
+          x: this.position.x + ((i - 1) % 2),
+          y: this.position.y + ((array.length - i - 2) % 2),
+        },
+      }));
   }
 
   protected get fpsAspect(): number {
