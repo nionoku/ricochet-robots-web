@@ -6,4 +6,8 @@ import Game from '@/ui/views/Game.vue';
     Game,
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  beforeCreate(): void {
+    document.title = 'Ricochet Robots';
+  }
+}
