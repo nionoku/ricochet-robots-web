@@ -1,6 +1,8 @@
 // eslint-disable-next-line max-classes-per-file
 import { Direction } from '@/types/direction';
-import { Camera, Raycaster, Scene } from 'three';
+import {
+  Camera, Raycaster, Scene, Vec2,
+} from 'three';
 import { Arrow, calcArrowsPositions } from './Arrow';
 import { Board } from './Board';
 import { Robot } from './Robot';
@@ -64,6 +66,8 @@ class ClickIntersector extends BaseMouseIntersector {
 class Controlls {
   protected _selectedRobot: Robot | null = null
 
+  protected _movesHistory: Array<{ uuid: string, position: Vec2 }> = []
+
   // eslint-disable-next-line no-useless-constructor
   constructor(
     protected readonly _board: Board,
@@ -96,9 +100,32 @@ class Controlls {
     return undefined;
   }
 
+  public undoLastMove(): void {
+    const lastMove = this._movesHistory.pop();
+
+    if (lastMove) {
+      const lastMovedRobot = this._robots.find(({ uuid }) => lastMove.uuid === uuid);
+
+      if (lastMovedRobot) {
+        this.hideArrows();
+        lastMovedRobot.position = lastMove.position;
+        this.showAvailableArrows(lastMovedRobot);
+      }
+    }
+  }
+
+  public get hasUndoLastMove(): boolean {
+    return this._movesHistory.length > 0;
+  }
+
   protected onIntersectArrow(arrow: Arrow): void {
     if (this._selectedRobot) {
       this.hideArrows();
+      // push previous step
+      this._movesHistory.push({
+        uuid: this._selectedRobot.uuid,
+        position: this._selectedRobot.position,
+      });
 
       const finishPoint = this._board.move(this._selectedRobot, arrow.direction);
       this._selectedRobot.position = finishPoint;
