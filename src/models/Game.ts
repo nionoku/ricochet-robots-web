@@ -56,7 +56,6 @@ abstract class BaseMouseIntersector implements Intersector<MouseEvent> {
     window.removeEventListener(this.event, this.listener);
   }
 }
-
 class ClickIntersector extends BaseMouseIntersector {
   constructor(raycaster: Raycaster, camera: Camera, scene: Scene) {
     super(raycaster, camera, scene, 'click');
@@ -66,7 +65,9 @@ class ClickIntersector extends BaseMouseIntersector {
 class Controlls {
   protected _selectedRobot: Robot | null = null
 
-  protected _movesHistory: Array<{ uuid: string, position: Vec2 }> = []
+  protected readonly _movesHistory: Array<{ uuid: string, position: Vec2 }> = []
+
+  protected readonly _initialPositions: Array<{ uuid: string, position: Vec2 }> = []
 
   // eslint-disable-next-line no-useless-constructor
   constructor(
@@ -75,12 +76,11 @@ class Controlls {
     protected readonly _arrows: Array<Arrow>,
   ) {}
 
-  public onIntersectByClick(uuid: string): void {
+  public whenIntersectByClick(uuid: string): void {
     // TODO (2022.01.31): Replace logic
     const intersectedRobot = this._robots.find((it) => it.uuid === uuid);
 
     if (intersectedRobot) {
-      this._selectedRobot = intersectedRobot;
       return this.onIntersectRobot(intersectedRobot);
     }
 
@@ -100,22 +100,73 @@ class Controlls {
     return undefined;
   }
 
+  public whenKeypress(event: KeyboardEvent): void {
+    switch (event.keyCode) {
+      case 32: {
+        const index = this._robots.findIndex((it) => it.uuid === this._selectedRobot?.uuid);
+        const validatedIndex = (index + 1) < this._robots.length
+          ? index + 1
+          : 0;
+
+        return this.onIntersectRobot(this._robots[validatedIndex]);
+      }
+
+      case 37:
+      case 38:
+      case 39:
+      case 40: {
+        if (this._selectedRobot) {
+          // like as left, up, right, down
+          const direction = Math.abs(37 - event.keyCode);
+          const likeAsIntersectedArrow = this._arrows.find((it) => it.direction === direction);
+
+          if (likeAsIntersectedArrow) {
+            return this.onIntersectArrow(likeAsIntersectedArrow);
+          }
+        }
+
+        break;
+      }
+
+      default:
+    }
+
+    return undefined;
+  }
+
   public undoLastMove(): void {
     const lastMove = this._movesHistory.pop();
 
-    if (lastMove) {
-      const lastMovedRobot = this._robots.find(({ uuid }) => lastMove.uuid === uuid);
-
-      if (lastMovedRobot) {
-        this.hideArrows();
-        lastMovedRobot.position = lastMove.position;
-        this.showAvailableArrows(lastMovedRobot);
-      }
+    if (!lastMove) {
+      return;
     }
+
+    const lastMovedRobot = this._robots.find(({ uuid }) => lastMove.uuid === uuid);
+
+    if (!lastMovedRobot) {
+      return;
+    }
+
+    this.hideArrows();
+    this._selectedRobot = lastMovedRobot;
+    this._selectedRobot.position = lastMove.position;
+    this.showAvailableArrows(this._selectedRobot);
   }
 
   public get hasUndoLastMove(): boolean {
     return this._movesHistory.length > 0;
+  }
+
+  public makeTurn(): void {
+    this._selectedRobot = null;
+    this._movesHistory.splice(0);
+    this._initialPositions.splice(0);
+    this._initialPositions.push(
+      ...this._robots.map(({ uuid, position }) => ({
+        uuid,
+        position,
+      })),
+    );
   }
 
   protected onIntersectArrow(arrow: Arrow): void {
@@ -135,6 +186,8 @@ class Controlls {
   }
 
   protected onIntersectRobot(robot: Robot): void {
+    this._selectedRobot = robot;
+
     robot.cancelIddleAnimation();
 
     this.showAvailableArrows(robot);

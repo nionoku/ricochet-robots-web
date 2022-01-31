@@ -95,11 +95,15 @@ export default class Scene extends Vue {
     /// --- listeners ---
     const clickIntersector = new Game.ClickIntersector(raycaster, camera, scene);
     clickIntersector
-      .setOnIntersect((uuid) => controlls.onIntersectByClick(uuid));
+      .setOnIntersect((uuid) => controlls.whenIntersectByClick(uuid));
     clickIntersector
       .watch();
     this.whenDestroy.push(clickIntersector.cancel);
 
+    // watch keypress
+    window.addEventListener('keydown', (event) => {
+      controlls.whenKeypress(event);
+    });
     // watch resize window
     window.addEventListener('resize', (event) => {
       event.preventDefault();
