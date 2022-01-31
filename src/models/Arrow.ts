@@ -28,10 +28,14 @@ export class Arrow {
     protected readonly _direction: Direction,
   ) {
     arrowObject.scale.set(0.01, 0.008, 0.02);
-    arrowObject.rotation.set(-(Math.PI / 2), 0, (Math.PI / 2) * _direction);
+    const rotateByZ = _direction % 2
+      ? (Math.PI / 2) * _direction + Math.PI
+      : (Math.PI / 2) * _direction;
+
+    arrowObject.rotation.set(-(Math.PI / 2), 0, rotateByZ);
     arrowObject.position.setY(0.1);
     // eslint-disable-next-line no-param-reassign
-    // arrowObject.visible = false;
+    arrowObject.visible = false;
   }
 
   public get uuid(): string {
@@ -55,5 +59,13 @@ export class Arrow {
 
   public get direction(): Direction {
     return this._direction;
+  }
+
+  public get visible(): boolean {
+    return this.arrowObject.visible;
+  }
+
+  public set visible(visible: boolean) {
+    this.arrowObject.visible = visible;
   }
 }

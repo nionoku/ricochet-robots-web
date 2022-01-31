@@ -73,13 +73,6 @@ export default class Scene extends Vue {
       const arrowMesh = new Arrow.Builder(arrowGeometry, new Color(color), name).make();
       return new Arrow(arrowMesh, direction);
     });
-    robots[0].arrowsPositions.forEach((it) => {
-      const arrow = arrows.find((arrow) => arrow.direction === it.direction);
-
-      if (arrow) {
-        arrow.position = it.position;
-      }
-    });
     /// --- end arrows ---
     /// --- lights ---
     const directionalLightsDescription = sceneDescription.directional_lights
@@ -92,7 +85,7 @@ export default class Scene extends Vue {
     /// --- end lights ---
     /// --- game controller ---
     const gameController = new Game();
-    const controlls = new Game.Controlls(robots);
+    const controlls = new Game.Controlls(board, robots, arrows);
     /// --- end game controller ---
     /// --- add objects on scene ---
     scene.add(board.object);

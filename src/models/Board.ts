@@ -211,6 +211,16 @@ export class Board {
     return this.positionByCoords({ x, y });
   }
 
+  public availableDirections(robot: Robot): Array<Direction> {
+    const matrix = this.calcBoardMatrix(
+      this._robots.filter((it) => it.uuid !== robot.uuid),
+    );
+    const { x, y } = this.coordsByPosition(robot.position);
+
+    return [Direction.LEFT, Direction.TOP, Direction.RIGHT, Direction.BOTTOM]
+      .filter((it) => ((matrix[y][x] >> (3 - it)) & 1));
+  }
+
   public coordsByPosition({ x, y }: Vec2): Vec2 {
     return {
       x: round(BOARD_CENTER + (x - DEVIATION), 10),

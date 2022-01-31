@@ -1,5 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import { Camera, Raycaster, Scene } from 'three';
+import { Arrow } from './Arrow';
+import { Board } from './Board';
 import { Robot } from './Robot';
 
 export interface Intersector<E extends Event> {
@@ -61,7 +63,9 @@ class ClickIntersector extends BaseMouseIntersector {
 class Controlls {
   // eslint-disable-next-line no-useless-constructor
   constructor(
+    protected readonly _board: Board,
     protected readonly _robots: Array<Robot>,
+    protected readonly _arrows: Array<Arrow>,
   ) {}
 
   public onIntersectByClick(uuid: string): void {
@@ -70,12 +74,41 @@ class Controlls {
 
     if (intersectedRobot) {
       intersectedRobot.cancelIddleAnimation();
-    }
 
-    // enable iddle animation for other robots
-    this._robots
-      .filter((it) => it.uuid !== uuid && !it.hasIddleAnimation)
-      .forEach((it) => it.keepIddleAnimation());
+      const directions = this._board.availableDirections(intersectedRobot);
+
+      this._arrows.forEach((it) => {
+        if (directions.includes(it.direction)) {
+          const position = intersectedRobot.arrowsPositions
+            .find(({ direction }) => direction === it.direction)
+            ?.position;
+
+          if (position) {
+            // eslint-disable-next-line no-param-reassign
+            it.position = position;
+            // eslint-disable-next-line no-param-reassign
+            it.visible = true;
+          }
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          it.visible = false;
+        }
+      });
+
+      // enable iddle animation for other robots
+      this._robots
+        .filter((it) => it.uuid !== uuid && !it.hasIddleAnimation)
+        .forEach((it) => it.keepIddleAnimation());
+    } else {
+      // hide arrows
+      this._arrows.forEach((it) => {
+        // eslint-disable-next-line no-param-reassign
+        it.visible = false;
+      });
+      // enable iddle animation for each robot
+      this._robots
+        .forEach((it) => it.keepIddleAnimation());
+    }
   }
 }
 

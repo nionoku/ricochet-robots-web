@@ -8,17 +8,17 @@
     {
       "name": "arrow_top",
       "direction": 1,
-      "color": "blue"
+      "color": "orange"
     },
     {
       "name": "arrow_right",
       "direction": 2,
-      "color": "green"
+      "color": "orange"
     },
     {
       "name": "arrow_bottom",
       "direction": 3,
-      "color": "#A569BD"
+      "color": "orange"
     }
   ]
 }
