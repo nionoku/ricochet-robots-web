@@ -45,7 +45,7 @@ export enum Direction {
 class Builder {
   // eslint-disable-next-line no-useless-constructor
   constructor(
-    protected boardParts: Array<Object3D>,
+    protected readonly boardParts: Array<Object3D>,
   ) {}
 
   public make(): Group {
@@ -96,11 +96,11 @@ class Builder {
 }
 
 export class Board {
-  public static Builder = Builder
+  public static readonly Builder = Builder
 
-  protected _wallsCoords: Array<Vec2> = []
+  protected readonly _wallsCoords: Array<Vec2> = []
 
-  protected _availablePositions: Array<Vec2> = Array
+  protected readonly _availablePositions: Array<Vec2> = Array
     .from({ length: BOARD_SIZE }, (_, i) => ({
       x: i % BOARD_WIDTH,
       y: Math.floor(i / BOARD_WIDTH),
@@ -108,10 +108,10 @@ export class Board {
     // exclude center
     .filter(({ x, y }) => !(CENTER_COORDS.includes(x) && CENTER_COORDS.includes(y)));
 
-  protected _robots: Array<Robot> = []
+  protected readonly _robots: Array<Robot> = []
 
   constructor(
-    protected _boardParts: Object3D,
+    protected readonly _boardParts: Object3D,
   ) {
     _boardParts.traverse((it) => {
       const position = this.vector3ToVec2(it.getWorldPosition(new Vector3()));
@@ -153,7 +153,8 @@ export class Board {
   }
 
   public set robots(robots: Array<Robot>) {
-    this._robots = robots;
+    this._robots.splice(0);
+    this._robots.push(...robots);
   }
 
   public generateAvailablePositions(count: number): Array<Vec2> {

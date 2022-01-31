@@ -2,22 +2,28 @@
 import { Camera, Raycaster, Scene } from 'three';
 import { Robot } from './Robot';
 
-export interface Intersector {
+export interface Intersector<E extends Event> {
+  // Pick<WindowEventMap, 'click' | 'mouseover'>
+  event: keyof WindowEventMap
+  listener: (event: E) => any
+  onIntersect?: (uuid: string) => void
   watch(): void
   cancel(): void
 }
 
-class ClickIntersector implements Intersector {
-  protected listener: (event: MouseEvent) => any
+// GlobalEventHandlersEventMap['click'] === MouseEvent
+abstract class BaseMouseIntersector implements Intersector<GlobalEventHandlersEventMap['click']> {
+  public readonly listener: (event: MouseEvent) => any
 
-  protected onIntersect?: (uuid: string) => void
+  public onIntersect?: (uuid: string) => void
 
   constructor(
     raycaster: Raycaster,
     camera: Camera,
     scene: Scene,
+    public event: keyof Pick<WindowEventMap, 'click'>,
   ) {
-    this.listener = (event: MouseEvent) => {
+    this.listener = (event: GlobalEventHandlersEventMap['click']) => {
       const [clickX, clickY] = [
         (event.clientX / window.innerWidth) * 2 - 1,
         (event.clientY / window.innerHeight) * 2 * -1 + 1,
@@ -34,23 +40,29 @@ class ClickIntersector implements Intersector {
     };
   }
 
+  public setOnIntersect(onIntersect: (uuid: string) => void): void {
+    this.onIntersect = onIntersect;
+  }
+
   public watch(): void {
-    window.addEventListener('click', this.listener);
+    window.addEventListener(this.event, this.listener);
   }
 
   public cancel(): void {
-    window.removeEventListener('click', this.listener);
+    window.removeEventListener(this.event, this.listener);
   }
+}
 
-  public setOnIntersect(onIntersect: (uuid: string) => void): void {
-    this.onIntersect = onIntersect;
+class ClickIntersector extends BaseMouseIntersector {
+  constructor(raycaster: Raycaster, camera: Camera, scene: Scene) {
+    super(raycaster, camera, scene, 'click');
   }
 }
 
 class Controlls {
   // eslint-disable-next-line no-useless-constructor
   constructor(
-    protected _robots: Array<Robot>,
+    protected readonly _robots: Array<Robot>,
   ) {}
 
   public onIntersectByClick(uuid: string): void {
@@ -64,7 +76,7 @@ class Controlls {
 }
 
 export class Game {
-  public static Controlls = Controlls
+  public static readonly Controlls = Controlls
 
-  public static ClickIntersector = ClickIntersector
+  public static readonly ClickIntersector = ClickIntersector
 }

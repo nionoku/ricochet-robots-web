@@ -7,9 +7,9 @@ import robotDescription from '@/assets/robot.json';
 class Builder {
   // eslint-disable-next-line no-useless-constructor
   constructor(
-    protected _geometry: BufferGeometry,
-    protected _color: Color,
-    protected _name: string,
+    protected readonly _geometry: BufferGeometry,
+    protected readonly _color: Color,
+    protected readonly _name: string,
   ) {}
 
   public make(): Mesh {
@@ -21,14 +21,14 @@ class Builder {
 }
 
 export class Robot {
-  public static Builder = Builder
+  public static readonly Builder = Builder
 
   protected iddleAnimationDirection: -1 | 1 = 1
 
   protected fps = 0
 
   constructor(
-    protected robotObject: Object3D,
+    protected readonly robotObject: Object3D,
     _initialPosition: Vec2,
     protected hasIddleAnimation = true,
   ) {
