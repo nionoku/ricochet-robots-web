@@ -4,6 +4,7 @@ import {
   Group, Mesh, MeshStandardMaterial, Object3D, Vec2, Vector3,
 } from 'three';
 import boardDescription from '@/assets/board.json';
+import { Direction } from '@/types/direction';
 import { Robot } from './Robot';
 
 const BOARD_WIDTH = boardDescription.width;
@@ -34,13 +35,6 @@ const TARGETS: Array<string> = boardDescription.targets;
 // xxxx[2] - right
 // xxxx[3] - bottom
 type Directions = number
-
-export enum Direction {
-  LEFT,
-  TOP,
-  RIGHT,
-  BOTTOM
-}
 
 class Builder {
   // eslint-disable-next-line no-useless-constructor

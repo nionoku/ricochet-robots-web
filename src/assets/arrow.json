@@ -1,0 +1,24 @@
+{
+  "arrows": [
+    {
+      "name": "arrow_left",
+      "direction": 0,
+      "color": "orange"
+    },
+    {
+      "name": "arrow_top",
+      "direction": 1,
+      "color": "blue"
+    },
+    {
+      "name": "arrow_right",
+      "direction": 2,
+      "color": "green"
+    },
+    {
+      "name": "arrow_bottom",
+      "direction": 3,
+      "color": "#A569BD"
+    }
+  ]
+}
