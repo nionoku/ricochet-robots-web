@@ -40,7 +40,6 @@ export default class Scene extends Vue {
     const renderer = this.makeRenderer(this.container);
     const scene = this.makeScene();
     const camera = this.makePerspectiveCamera(this.container);
-    const controls = this.makeControls(camera, renderer.domElement);
     const raycaster = new Raycaster();
 
     const [
@@ -116,7 +115,6 @@ export default class Scene extends Vue {
     this.container.appendChild(renderer.domElement);
 
     function render(time: number) {
-      controls.update();
       // render scene
       renderer.render(scene, camera);
       // apply robots iddle animation
@@ -168,7 +166,9 @@ export default class Scene extends Vue {
 
   protected makePerspectiveCamera(container: HTMLElement): PerspectiveCamera {
     const aspect = container.clientWidth / container.clientHeight;
-    const { near, far, fov } = cameraDescription;
+    const {
+      near, far, fov,
+    } = cameraDescription;
     const zoom = this.calcZoom(container);
 
     const camera = new PerspectiveCamera(fov, aspect, near, far);
@@ -183,6 +183,8 @@ export default class Scene extends Vue {
       cameraDescription.rotation.z,
     );
     camera.zoom = zoom;
+    // look at center
+    camera.lookAt(new Vector3(0, 0, 0));
     camera.updateProjectionMatrix();
 
     return camera;
@@ -195,11 +197,10 @@ export default class Scene extends Vue {
 
   protected makeControls(camera: Camera, canvas: HTMLCanvasElement): OrbitControls {
     const controls = new OrbitControls(camera, canvas);
-    controls.enableRotate = true;
-    controls.maxZoom = 3;
-    // controls.minPolarAngle = 0
-    // controls.maxPolarAngle = Math.PI / 3
-    // controls.enableDamping = true
+    controls.enableRotate = false;
+    controls.enablePan = false;
+    controls.maxDistance = 19.5;
+    controls.minDistance = controls.maxDistance;
 
     return controls;
   }
