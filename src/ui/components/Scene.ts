@@ -3,18 +3,17 @@ import { Ref } from 'vue-property-decorator';
 import { Options, Vue } from 'vue-class-component';
 import {
   NoToneMapping,
-  Renderer,
   sRGBEncoding,
   WebGLRenderer,
   Scene as ThreeScene,
   Color,
   PerspectiveCamera,
-  Camera,
   Raycaster,
   DirectionalLight,
   Vector3,
 } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import sceneDescription from '@/assets/scene.json';
 import cameraDescription from '@/assets/camera.json';
 import robotDescription from '@/assets/robot.json';
@@ -41,6 +40,7 @@ export default class Scene extends Vue {
     const scene = this.makeScene();
     const camera = this.makePerspectiveCamera(this.container);
     const raycaster = new Raycaster();
+    const composer = new EffectComposer(renderer);
 
     const [
       sceneObjects,
@@ -118,9 +118,12 @@ export default class Scene extends Vue {
     // add scene on page
     this.container.appendChild(renderer.domElement);
 
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
     function render(time: number) {
       // render scene
-      renderer.render(scene, camera);
+      composer.render();
       // apply robots iddle animation
       robots.forEach((it) => it.processIddleAnimation());
     }
@@ -149,7 +152,7 @@ export default class Scene extends Vue {
     this.whenDestroy.forEach((it) => it());
   }
 
-  protected makeRenderer(container: HTMLElement): Renderer {
+  protected makeRenderer(container: HTMLElement): WebGLRenderer {
     const renderer = new WebGLRenderer({
       antialias: true,
     });
@@ -197,16 +200,6 @@ export default class Scene extends Vue {
   protected calcZoom(container: HTMLElement): number {
     const aspect = (container.clientWidth / container.clientHeight) * cameraDescription.zoom;
     return Math.min(aspect, cameraDescription.zoom);
-  }
-
-  protected makeControls(camera: Camera, canvas: HTMLCanvasElement): OrbitControls {
-    const controls = new OrbitControls(camera, canvas);
-    controls.enableRotate = false;
-    controls.enablePan = false;
-    controls.maxDistance = 19.5;
-    controls.minDistance = controls.maxDistance;
-
-    return controls;
   }
 
   protected makeDirectionalLights(

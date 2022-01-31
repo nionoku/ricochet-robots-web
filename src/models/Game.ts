@@ -1,5 +1,4 @@
 // eslint-disable-next-line max-classes-per-file
-import { Direction } from '@/types/direction';
 import {
   Camera, Raycaster, Scene, Vec2,
 } from 'three';
@@ -77,7 +76,6 @@ class Controlls {
   ) {}
 
   public whenIntersectByClick(uuid: string): void {
-    // TODO (2022.01.31): Replace logic
     const intersectedRobot = this._robots.find((it) => it.uuid === uuid);
 
     if (intersectedRobot) {
