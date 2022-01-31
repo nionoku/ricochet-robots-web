@@ -1,4 +1,24 @@
 {
   "fps": 60,
-  "background": "#9A9A9A"
+  "background": "#9A9A9A",
+  "directional_lights": [
+    {
+      "color": "white",
+      "intensity": 0.3,
+      "position": {
+        "x": 12,
+        "y": 15,
+        "z": 10
+      }
+    },
+    {
+      "color": "white",
+      "intensity": 0.3,
+      "position": {
+        "x": -12,
+        "y": 15,
+        "z": -10
+      }
+    }
+  ]
 }

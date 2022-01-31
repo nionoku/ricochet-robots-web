@@ -11,6 +11,8 @@ import {
   PerspectiveCamera,
   Camera,
   Raycaster,
+  DirectionalLight,
+  Vector3,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import sceneDescription from '@/assets/scene.json';
@@ -61,6 +63,15 @@ export default class Scene extends Vue {
     robots.forEach((it) => it.startIddleAnimation(sceneDescription.fps));
     board.robots = robots;
     /// --- end robots ---
+    /// --- lights ---
+    const directionalLightsDescription = sceneDescription.directional_lights
+      .map(({ intensity, position, color }) => ({
+        intensity,
+        position: new Vector3(position.x, position.y, position.z),
+        color: new Color(color),
+      }));
+    const directionalLights = this.makeDirectionalLights(directionalLightsDescription);
+    /// --- end lights ---
     /// --- game controller ---
     const gameController = new Game();
     const controlls = new Game.Controlls(robots);
@@ -68,6 +79,7 @@ export default class Scene extends Vue {
     /// --- add objects on scene ---
     scene.add(board.object);
     scene.add(...robots.map((it) => it.object));
+    scene.add(...directionalLights);
     /// --- end add objects on scene ---
     /// --- listeners ---
     const clickIntersector = new Game.ClickIntersector(raycaster, camera, scene);
@@ -175,5 +187,16 @@ export default class Scene extends Vue {
     // controls.enableDamping = true
 
     return controls;
+  }
+
+  protected makeDirectionalLights(
+    description: Array<Pick<DirectionalLight, 'position' | 'intensity' | 'color'>>,
+  ): Array<DirectionalLight> {
+    return description.map(({ color, intensity, position }) => {
+      const light = new DirectionalLight(new Color(color), intensity);
+      light.position.set(position.x, position.y, position.z);
+
+      return light;
+    });
   }
 }
