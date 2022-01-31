@@ -11,8 +11,7 @@ export interface Intersector<E extends Event> {
   cancel(): void
 }
 
-// GlobalEventHandlersEventMap['click'] === MouseEvent
-abstract class BaseMouseIntersector implements Intersector<GlobalEventHandlersEventMap['click']> {
+abstract class BaseMouseIntersector implements Intersector<MouseEvent> {
   public readonly listener: (event: MouseEvent) => any
 
   public onIntersect?: (uuid: string) => void
@@ -23,7 +22,7 @@ abstract class BaseMouseIntersector implements Intersector<GlobalEventHandlersEv
     scene: Scene,
     public event: keyof Pick<WindowEventMap, 'click'>,
   ) {
-    this.listener = (event: GlobalEventHandlersEventMap['click']) => {
+    this.listener = (event: MouseEvent) => {
       const [clickX, clickY] = [
         (event.clientX / window.innerWidth) * 2 - 1,
         (event.clientY / window.innerHeight) * 2 * -1 + 1,
@@ -72,6 +71,11 @@ class Controlls {
     if (intersectedRobot) {
       intersectedRobot.cancelIddleAnimation();
     }
+
+    // enable iddle animation for other robots
+    this._robots
+      .filter((it) => it.uuid !== uuid && !it.hasIddleAnimation)
+      .forEach((it) => it.keepIddleAnimation());
   }
 }
 

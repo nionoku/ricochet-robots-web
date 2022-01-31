@@ -25,17 +25,18 @@ export class Robot {
 
   protected iddleAnimationDirection: -1 | 1 = 1
 
+  protected _hasIddleAnimation = true
+
   protected fps = 0
 
   constructor(
     protected readonly robotObject: Object3D,
-    _initialPosition: Vec2,
-    protected hasIddleAnimation = true,
+    initialPosition: Vec2,
   ) {
     robotObject.scale.set(0.03, 0.03, 0.03);
     robotObject.rotation.set(-(Math.PI / 2), 0, 0);
 
-    this.position = _initialPosition;
+    this.position = initialPosition;
   }
 
   public get uuid(): string {
@@ -76,8 +77,12 @@ export class Robot {
     this.positionByZ = initPosition;
   }
 
+  public keepIddleAnimation(): void {
+    this._hasIddleAnimation = true;
+  }
+
   public cancelIddleAnimation(): void {
-    this.hasIddleAnimation = false;
+    this._hasIddleAnimation = false;
 
     const [initialPosition] = [
       robotDescription.by_z_animation_limits[0],
@@ -87,14 +92,14 @@ export class Robot {
   }
 
   public processIddleAnimation(): void {
-    if (this.hasIddleAnimation && this.fps > 0) {
+    if (this._hasIddleAnimation && this.fps > 0) {
       const [step, minPosition, maxPosition] = [
         robotDescription.by_z_animation_step,
         robotDescription.by_z_animation_limits[0],
         robotDescription.by_z_animation_limits[1],
       ];
 
-      const stepDelta = step * this.iddleAnimationDirection * (1 - this.fps / 100);
+      const stepDelta = step * this.iddleAnimationDirection * this.fpsAspect;
       const nextPosition = this.robotObject.position.y + stepDelta;
 
       if (nextPosition <= minPosition) {
@@ -107,5 +112,13 @@ export class Robot {
 
       this.positionByZ = nextPosition;
     }
+  }
+
+  public get hasIddleAnimation(): boolean {
+    return this._hasIddleAnimation;
+  }
+
+  protected get fpsAspect(): number {
+    return (1 - this.fps / 100);
   }
 }
