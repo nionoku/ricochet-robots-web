@@ -122,17 +122,6 @@ export class Robot {
     return this._hasIddleAnimation;
   }
 
-  public get arrowsPositions(): Array<{ direction: Direction, position: Vec2 }> {
-    return Array.from({ length: 4 })
-      .map((_, i) => ({
-        direction: i,
-        position: {
-          x: this.position.x + ((i - 1) % 2),
-          y: this.position.y + ((i - 2) % 2),
-        },
-      }));
-  }
-
   protected get fpsAspect(): number {
     return (1 - this.fps / 100);
   }

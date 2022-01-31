@@ -1,6 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
+import { Direction } from '@/types/direction';
 import { Camera, Raycaster, Scene } from 'three';
-import { Arrow } from './Arrow';
+import { Arrow, calcArrowsPositions } from './Arrow';
 import { Board } from './Board';
 import { Robot } from './Robot';
 
@@ -61,6 +62,8 @@ class ClickIntersector extends BaseMouseIntersector {
 }
 
 class Controlls {
+  protected _selectedRobot: Robot | null = null
+
   // eslint-disable-next-line no-useless-constructor
   constructor(
     protected readonly _board: Board,
@@ -73,42 +76,76 @@ class Controlls {
     const intersectedRobot = this._robots.find((it) => it.uuid === uuid);
 
     if (intersectedRobot) {
-      intersectedRobot.cancelIddleAnimation();
+      this._selectedRobot = intersectedRobot;
+      return this.onIntersectRobot(intersectedRobot);
+    }
 
-      const directions = this._board.availableDirections(intersectedRobot);
+    const intersectedArrow = this._arrows.find((it) => it.uuid === uuid);
 
-      this._arrows.forEach((it) => {
-        if (directions.includes(it.direction)) {
-          const position = intersectedRobot.arrowsPositions
-            .find(({ direction }) => direction === it.direction)
-            ?.position;
+    if (intersectedArrow) {
+      return this.onIntersectArrow(intersectedArrow);
+    }
 
-          if (position) {
-            // eslint-disable-next-line no-param-reassign
-            it.position = position;
-            // eslint-disable-next-line no-param-reassign
-            it.visible = true;
-          }
-        } else {
+    this.hideArrows();
+    // enable iddle animation for each robot
+    this._robots
+      .forEach((it) => it.keepIddleAnimation());
+    // forgot selected robot
+    this._selectedRobot = null;
+
+    return undefined;
+  }
+
+  protected onIntersectArrow(arrow: Arrow): void {
+    if (this._selectedRobot) {
+      this.hideArrows();
+
+      const finishPoint = this._board.move(this._selectedRobot, arrow.direction);
+      this._selectedRobot.position = finishPoint;
+
+      this.showAvailableArrows(this._selectedRobot);
+    }
+  }
+
+  protected onIntersectRobot(robot: Robot): void {
+    robot.cancelIddleAnimation();
+
+    this.showAvailableArrows(robot);
+
+    // enable iddle animation for other robots
+    this._robots
+      .filter((it) => it.uuid !== robot.uuid && !it.hasIddleAnimation)
+      .forEach((it) => it.keepIddleAnimation());
+  }
+
+  protected hideArrows(): void {
+    // hide arrows
+    this._arrows.forEach((it) => {
+      // eslint-disable-next-line no-param-reassign
+      it.visible = false;
+    });
+  }
+
+  protected showAvailableArrows(robot: Robot): void {
+    const directions = this._board.availableDirections(robot);
+
+    this._arrows.forEach((it) => {
+      if (directions.includes(it.direction)) {
+        const position = calcArrowsPositions(robot)
+          .find(({ direction }) => direction === it.direction)
+          ?.position;
+
+        if (position) {
           // eslint-disable-next-line no-param-reassign
-          it.visible = false;
+          it.position = position;
+          // eslint-disable-next-line no-param-reassign
+          it.visible = true;
         }
-      });
-
-      // enable iddle animation for other robots
-      this._robots
-        .filter((it) => it.uuid !== uuid && !it.hasIddleAnimation)
-        .forEach((it) => it.keepIddleAnimation());
-    } else {
-      // hide arrows
-      this._arrows.forEach((it) => {
+      } else {
         // eslint-disable-next-line no-param-reassign
         it.visible = false;
-      });
-      // enable iddle animation for each robot
-      this._robots
-        .forEach((it) => it.keepIddleAnimation());
-    }
+      }
+    });
   }
 }
 

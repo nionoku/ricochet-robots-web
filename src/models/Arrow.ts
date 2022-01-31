@@ -3,6 +3,8 @@ import { Direction } from '@/types/direction';
 import {
   BufferGeometry, Color, Mesh, MeshStandardMaterial, Object3D, Vec2,
 } from 'three';
+import arrowDescription from '@/assets/arrow.json';
+import { Robot } from './Robot';
 
 class Builder {
   // eslint-disable-next-line no-useless-constructor
@@ -13,7 +15,11 @@ class Builder {
   ) {}
 
   public make(): Mesh {
-    const material = new MeshStandardMaterial({ color: this._color });
+    const material = new MeshStandardMaterial({
+      color: this._color,
+      transparent: Boolean(arrowDescription.opacity),
+      opacity: arrowDescription.opacity,
+    });
     const mesh = new Mesh(this._geometry, material);
     mesh.name = this._name;
     return mesh;
@@ -27,7 +33,11 @@ export class Arrow {
     protected readonly arrowObject: Object3D,
     protected readonly _direction: Direction,
   ) {
-    arrowObject.scale.set(0.01, 0.008, 0.02);
+    arrowObject.scale.set(
+      arrowDescription.height,
+      arrowDescription.width,
+      0.02,
+    );
     const rotateByZ = _direction % 2
       ? (Math.PI / 2) * _direction + Math.PI
       : (Math.PI / 2) * _direction;
@@ -68,4 +78,17 @@ export class Arrow {
   public set visible(visible: boolean) {
     this.arrowObject.visible = visible;
   }
+}
+
+export function calcArrowsPositions(
+  robot: Robot,
+): Array<{ direction: Direction, position: Vec2 }> {
+  return Array.from({ length: 4 })
+    .map((_, i) => ({
+      direction: i,
+      position: {
+        x: robot.position.x + (((i - 1) % 2) * (1 + arrowDescription.height * 20)),
+        y: robot.position.y + (((i - 2) % 2) * (1 + arrowDescription.height * 20)),
+      },
+    }));
 }
