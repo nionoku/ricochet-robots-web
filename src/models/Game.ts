@@ -1,4 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
+import { Direction } from '@/types/direction';
 import {
   Camera, Raycaster, Scene, Vec2,
 } from 'three';
@@ -127,6 +128,18 @@ class Controlls {
       }
 
       default:
+    }
+
+    return undefined;
+  }
+
+  public whenSwipe(direction: Direction): void {
+    if (this._selectedRobot) {
+      const likeAsIntersectedArrow = this._arrows.find((it) => it.direction === direction);
+
+      if (likeAsIntersectedArrow) {
+        return this.onIntersectArrow(likeAsIntersectedArrow);
+      }
     }
 
     return undefined;

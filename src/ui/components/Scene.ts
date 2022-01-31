@@ -23,6 +23,7 @@ import { Board } from '@/models/Board';
 import { Robot } from '@/models/Robot';
 import { Game } from '@/models/Game';
 import { Arrow } from '@/models/Arrow';
+import { SwipeHandler } from '@/utils/swipe';
 
 const TEMP_SCENE_PATH = 'models/boards/scene_1.json';
 const ROBOT_PATH = 'models/robot.stl';
@@ -57,12 +58,10 @@ export default class Scene extends Vue {
     /// --- end board ---
     /// --- robots ---
     const initialPositions = board.generateAvailablePositions(robotDescription.robots.length);
-    const robots: Array<Robot> = robotDescription.robots
-      .map((it, i) => {
-        const robotMesh = new Robot.Builder(robotGeometry, new Color(it.color), it.name)
-          .make();
-        return new Robot(robotMesh, initialPositions[i]);
-      });
+    const robots: Array<Robot> = robotDescription.robots.map((it, i) => {
+      const robotMesh = new Robot.Builder(robotGeometry, new Color(it.color), it.name).make();
+      return new Robot(robotMesh, initialPositions[i]);
+    });
     // init iddle animation up and down
     robots.forEach((it) => it.startIddleAnimation(sceneDescription.fps));
     board.robots = robots;
@@ -99,11 +98,14 @@ export default class Scene extends Vue {
     clickIntersector
       .watch();
     this.whenDestroy.push(clickIntersector.cancel);
-
     // watch keypress
     window.addEventListener('keydown', (event) => {
       controlls.whenKeypress(event);
     });
+    // watch swipe
+    const swipeListener = new SwipeHandler((direction) => controlls.whenSwipe(direction));
+    swipeListener.listen();
+    this.whenDestroy.push(swipeListener.cancel);
     // watch resize window
     window.addEventListener('resize', (event) => {
       event.preventDefault();
