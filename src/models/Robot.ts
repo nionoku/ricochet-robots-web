@@ -25,7 +25,8 @@ export class Robot {
 
   protected iddleAnimationDirection: -1 | 1 = 1
 
-  // eslint-disable-next-line no-useless-constructor
+  protected fps = 0
+
   constructor(
     protected robotObject: Object3D,
     _initialPosition: Vec2,
@@ -61,14 +62,18 @@ export class Robot {
     return this.robotObject.position.y;
   }
 
-  public startIddleAnimation(): void {
-    const [min, max] = [
+  public startIddleAnimation(fps = this.fps): void {
+    if (fps !== this.fps) {
+      this.fps = fps;
+    }
+
+    const [minPosition, maxPosition] = [
       robotDescription.by_z_animation_limits[0],
       robotDescription.by_z_animation_limits[1],
     ];
-    const initPosition = Math.random() * (max - min) + min;
+    const initPosition = Math.random() * (maxPosition - minPosition) + minPosition;
 
-    this.robotObject.position.setY(initPosition);
+    this.positionByZ = initPosition;
   }
 
   public cancelIddleAnimation(): void {
@@ -78,29 +83,29 @@ export class Robot {
       robotDescription.by_z_animation_limits[0],
     ];
 
-    this.robotObject.position.setY(initialPosition);
+    this.positionByZ = initialPosition;
   }
 
   public processIddleAnimation(): void {
-    if (this.hasIddleAnimation) {
-      const [step, min, max] = [
+    if (this.hasIddleAnimation && this.fps > 0) {
+      const [step, minPosition, maxPosition] = [
         robotDescription.by_z_animation_step,
         robotDescription.by_z_animation_limits[0],
         robotDescription.by_z_animation_limits[1],
       ];
 
-      // TODO (2022.01.31): Calculate step by FPS
-      const nextPosition = this.robotObject.position.y + (step * this.iddleAnimationDirection);
+      const stepDelta = step * this.iddleAnimationDirection * (1 - this.fps / 100);
+      const nextPosition = this.robotObject.position.y + stepDelta;
 
-      if (nextPosition <= min) {
+      if (nextPosition <= minPosition) {
         this.iddleAnimationDirection = 1;
       }
 
-      if (nextPosition >= max) {
+      if (nextPosition >= maxPosition) {
         this.iddleAnimationDirection = -1;
       }
 
-      this.robotObject.position.setY(nextPosition);
+      this.positionByZ = nextPosition;
     }
   }
 }

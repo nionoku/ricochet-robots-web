@@ -58,7 +58,7 @@ export default class Scene extends Vue {
         return new Robot(robotMesh, initialPositions[i]);
       });
     // init iddle animation up and down
-    robots.forEach((it) => it.startIddleAnimation());
+    robots.forEach((it) => it.startIddleAnimation(sceneDescription.fps));
     board.robots = robots;
     /// --- end robots ---
     /// --- game controller ---

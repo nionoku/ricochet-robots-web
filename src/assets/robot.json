@@ -23,5 +23,5 @@
   ],
   "robot_starts_with": "robot",
   "by_z_animation_limits": [0.05, 0.25],
-  "by_z_animation_step": 0.003
+  "by_z_animation_step": 0.01
 }
