@@ -88,6 +88,16 @@ export default class Scene extends Vue {
     clickIntersector
       .watch();
     this.whenDestroy.push(clickIntersector.cancel);
+
+    // watch resize window
+    window.addEventListener('resize', (event) => {
+      event.preventDefault();
+
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.zoom = this.calcZoom(this.container);
+      camera.updateProjectionMatrix();
+      renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    });
     /// --- end listeners ---
 
     // add scene on page
@@ -145,9 +155,8 @@ export default class Scene extends Vue {
   }
 
   protected makePerspectiveCamera(container: HTMLElement): PerspectiveCamera {
-    const fov = this.calcFov(container);
     const aspect = container.clientWidth / container.clientHeight;
-    const { near, far } = cameraDescription;
+    const { near, far, fov } = cameraDescription;
     const zoom = this.calcZoom(container);
 
     const camera = new PerspectiveCamera(fov, aspect, near, far);
@@ -167,15 +176,9 @@ export default class Scene extends Vue {
     return camera;
   }
 
-  protected calcFov(container: HTMLElement): number {
-    const diag = Math.sqrt((container.clientHeight ** 2) + (container.clientWidth ** 2));
-    return 2 * Math.atan(diag / (2 * 1000)) * (180 / Math.PI);
-  }
-
   protected calcZoom(container: HTMLElement): number {
-    const diag = Math.sqrt((container.clientHeight ** 2) + (container.clientWidth ** 2));
-    const aspect = container.clientWidth / container.clientHeight;
-    return diag * (aspect / cameraDescription.zoom.factor);
+    const aspect = (container.clientWidth / container.clientHeight) * cameraDescription.zoom;
+    return Math.min(aspect, cameraDescription.zoom);
   }
 
   protected makeControls(camera: Camera, canvas: HTMLCanvasElement): OrbitControls {

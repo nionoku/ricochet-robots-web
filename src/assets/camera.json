@@ -2,9 +2,7 @@
   "near": 0.01,
   "far": 1000,
   "fov": 50,
-  "zoom": {
-    "factor": 1600
-  },
+  "zoom": 1,
   "position": {
     "x": 0,
     "y": 20,

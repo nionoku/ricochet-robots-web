@@ -158,7 +158,8 @@ export class Board {
   }
 
   public generateAvailablePositions(count: number): Array<Vec2> {
-    const availablePositions: Array<Vec2> = [...this._availablePositions];
+    const availablePositions: Array<Vec2> = [...this._availablePositions]
+      .sort(() => Math.random() - 0.5);
     const positions: Array<Vec2> = [];
 
     for (let i = 0; i < count; i++) {
